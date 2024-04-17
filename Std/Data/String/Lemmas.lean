@@ -9,6 +9,7 @@ import Std.Data.List.Lemmas
 import Std.Data.String.Basic
 import Std.Tactic.Lint.Misc
 import Std.Tactic.SeqFocus
+import Std.Util.ProofWanted
 
 @[simp] theorem Char.length_toString (c : Char) : c.toString.length = 1 := rfl
 
@@ -757,7 +758,22 @@ theorem map_eq (f : Char → Char) (s) : map f s = ⟨s.1.map f⟩ := by
   simpa using mapAux_of_valid f [] s.1
 
 -- TODO: substrEq
+
 -- TODO: isPrefixOf
+proof_wanted isPrefixOf_data (s t : String) : s.isPrefixOf t → s.1.isPrefixOf t.1
+
+@[simp] proof_wanted empty_isPrefixOf (s : String) : "".isPrefixOf s
+
+proof_wanted isPrefixOf_empty_iff (s : String) : s.isPrefixOf "" ↔ s = ""
+
+proof_wanted isPrefixOf_self (s : String) : s.isPrefixOf s
+
+proof_wanted isPrefixOf_push_self (s : String) (c : Char) : s.isPrefixOf (s.push c)
+
+proof_wanted isPrefixOf_self_append (s t : String) : s.isPrefixOf (s ++ t)
+
+proof_wanted isPrefixOf_iff_exists_append (p s : String): p.isPrefixOf s ↔ ∃ t, s = p ++ t
+
 -- TODO: replace
 
 @[nolint unusedHavesSuffices] -- false positive from unfolding String.takeWhileAux
