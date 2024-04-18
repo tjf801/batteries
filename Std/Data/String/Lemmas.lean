@@ -762,7 +762,8 @@ theorem map_eq (f : Char → Char) (s) : map f s = ⟨s.1.map f⟩ := by
 -- TODO: isPrefixOf
 proof_wanted isPrefixOf_data (s t : String) : s.isPrefixOf t → s.1.isPrefixOf t.1
 
-@[simp] proof_wanted empty_isPrefixOf (s : String) : "".isPrefixOf s
+@[simp] theorem empty_isPrefixOf (s : String) : "".isPrefixOf s := by
+  simp [isPrefixOf, endPos, utf8ByteSize, substrEq, substrEq.loop]
 
 proof_wanted isPrefixOf_empty_iff (s : String) : s.isPrefixOf "" ↔ s = ""
 
