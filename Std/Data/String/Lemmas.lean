@@ -28,6 +28,9 @@ theorem ext_iff {s₁ s₂ : String} : s₁ = s₂ ↔ s₁.data = s₂.data := 
 
 @[simp] theorem length_empty : "".length = 0 := rfl
 
+theorem empty_iff_data_nil (s : String) : s = "" ↔ s.1 = [] :=
+  Iff.intro (fun h => ext_iff.mp h) (fun h => ext h)
+
 @[simp] theorem length_singleton (c : Char) : (String.singleton c).length = 1 := rfl
 
 @[simp] theorem length_push (c : Char) : (String.push s c).length = s.length + 1 := by
@@ -760,12 +763,34 @@ theorem map_eq (f : Char → Char) (s) : map f s = ⟨s.1.map f⟩ := by
 -- TODO: substrEq
 
 -- TODO: isPrefixOf
-proof_wanted isPrefixOf_data (s t : String) : s.isPrefixOf t → s.1.isPrefixOf t.1
-
 @[simp] theorem empty_isPrefixOf (s : String) : "".isPrefixOf s := by
   simp [isPrefixOf, endPos, utf8ByteSize, substrEq, substrEq.loop]
 
-proof_wanted isPrefixOf_empty_iff (s : String) : s.isPrefixOf "" ↔ s = ""
+@[simp] theorem isPrefixOf_empty_iff_empty (s : String) : s.isPrefixOf "" ↔ s = "" := by
+  apply Iff.intro
+  · intro h
+    simp [isPrefixOf, substrEq, endPos, utf8ByteSize] at h
+    exact ext_iff.mpr h.left
+  · intro
+    simp [*]
+
+theorem isPrefixOf_iff_data_prefix (s t : String) : s.isPrefixOf t ↔ s.1.isPrefixOf t.1 := by
+  apply Iff.intro
+  · intro h
+    unfold List.isPrefixOf
+    split
+    · trivial
+    · simp only [← empty_iff_data_nil] at *
+      simp [*] at h
+      contradiction
+    · admit -- TODO: something with induction and substrEq idk
+  · intro h
+    unfold List.isPrefixOf at h
+    split at h
+    · simp only [← empty_iff_data_nil] at *
+      simp [empty_isPrefixOf, *]
+    · contradiction
+    · admit -- TODO
 
 proof_wanted isPrefixOf_self (s : String) : s.isPrefixOf s
 
