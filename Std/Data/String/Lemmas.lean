@@ -764,6 +764,16 @@ theorem map_eq (f : Char → Char) (s) : map f s = ⟨s.1.map f⟩ := by
 
 -- TODO: substrEq
 -- TODO: isPrefixOf
+
+@[simp] theorem empty_isPrefixOf (s : String) : "".isPrefixOf s := by
+  simp [isPrefixOf, endPos, utf8ByteSize, substrEq, substrEq.loop]
+
+@[simp] theorem isPrefixOf_empty_iff_empty (s : String) : s.isPrefixOf "" ↔ s = "" := by
+  apply Iff.intro <;> intro h
+  · simp [isPrefixOf, substrEq, endPos, utf8ByteSize] at h
+    exact ext h.left
+  · simp [empty_isPrefixOf, h]
+
 -- TODO: replace
 
 @[nolint unusedHavesSuffices] -- false positive from unfolding String.takeWhileAux
