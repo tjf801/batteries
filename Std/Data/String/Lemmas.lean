@@ -14,16 +14,26 @@ import Std.Tactic.SeqFocus
 
 namespace String
 
+/-! ### Ext -/
+
 @[ext] theorem ext {s₁ s₂ : String} (h : s₁.data = s₂.data) : s₁ = s₂ :=
   show ⟨s₁.data⟩ = (⟨s₂.data⟩ : String) from h ▸ rfl
 
 theorem ext_iff {s₁ s₂ : String} : s₁ = s₂ ↔ s₁.data = s₂.data := ⟨fun h => h ▸ rfl, ext⟩
+
+/-! ### Basic -/
 
 @[simp] theorem default_eq : default = "" := rfl
 
 @[simp] theorem str_eq : str = push := rfl
 
 @[simp] theorem mk_length (s : List Char) : (String.mk s).length = s.length := rfl
+
+theorem singleton_eq (c : Char) : singleton c = ⟨[c]⟩ := rfl
+
+@[simp] theorem data_singleton (c : Char) : (singleton c).data = [c] := rfl
+
+/-! ### String.length -/
 
 @[simp] theorem length_empty : "".length = 0 := rfl
 
@@ -39,13 +49,36 @@ theorem ext_iff {s₁ s₂ : String} : s₁ = s₂ ↔ s₁.data = s₂.data := 
 @[simp] theorem length_append (s t : String) : (s ++ t).length = s.length + t.length := by
   simp only [length, append, List.length_append]
 
+/-! ### String.data -/
+
+attribute [simp] toList -- prefer `String.data` over `String.toList` in lemmas
+
 @[simp] theorem data_push (s : String) (c : Char) : (s.push c).1 = s.1 ++ [c] := rfl
 
 @[simp] theorem data_append (s t : String) : (s ++ t).1 = s.1 ++ t.1 := rfl
 
-attribute [simp] toList -- prefer `String.data` over `String.toList` in lemmas
-
 theorem lt_iff (s t : String) : s < t ↔ s.1 < t.1 := .rfl
+
+/-! ### String.append -/
+
+@[simp] theorem append_nil (s : String) : s ++ "" = s := ext (List.append_nil _)
+
+@[simp] theorem nil_append (s : String) : "" ++ s = s := rfl
+
+theorem append_assoc (s₁ s₂ s₃ : String) : (s₁ ++ s₂) ++ s₃ = s₁ ++ (s₂ ++ s₃) :=
+  ext (List.append_assoc ..)
+
+/-! ### String.join -/
+
+theorem join_eq (ss : List String) : join ss = ⟨(ss.map data).join⟩ := go ss [] where
+  go : ∀ (ss : List String) cs, ss.foldl (· ++ ·) (mk cs) = ⟨cs ++ (ss.map data).join⟩
+    | [], _ => by simp
+    | ⟨s⟩::ss, _ => (go ss _).trans (by simp)
+
+@[simp] theorem data_join (ss : List String) : (join ss).data = (ss.map data).join := by
+  rw [join_eq]
+
+/-! ### csize -/
 
 private theorem add_csize_pos : 0 < i + csize c :=
   Nat.add_pos_right _ (csize_pos c)
@@ -55,6 +88,8 @@ private theorem ne_add_csize_add_self : i ≠ n + csize c + i :=
 
 private theorem ne_self_add_add_csize : i ≠ i + (n + csize c) :=
   Nat.ne_of_lt (Nat.lt_add_of_pos_right add_csize_pos)
+
+/-! ### utf8Len -/
 
 /-- The UTF-8 byte length of a list of characters. (This is intended for specification purposes.) -/
 @[inline] def utf8Len : List Char → Nat := utf8ByteSize.go
@@ -95,6 +130,8 @@ theorem utf8Len_le_of_suffix (h : cs₁ <:+ cs₂) : utf8Len cs₁ ≤ utf8Len c
 theorem utf8Len_le_of_prefix (h : cs₁ <+: cs₂) : utf8Len cs₁ ≤ utf8Len cs₂ :=
   utf8Len_le_of_sublist h.sublist
 end
+
+/-! ### Pos -/
 
 @[simp] theorem endPos_eq (cs : List Char) : endPos ⟨cs⟩ = ⟨utf8Len cs⟩ := rfl
 
@@ -181,8 +218,12 @@ end Pos
 theorem endPos_eq_zero : ∀ (s : String), endPos s = 0 ↔ s = ""
   | ⟨_⟩ => Pos.ext_iff.trans <| utf8Len_eq_zero.trans ext_iff.symm
 
+/-! ### isEmpty -/
+
 theorem isEmpty_iff (s : String) : isEmpty s ↔ s = "" :=
   (beq_iff_eq ..).trans (endPos_eq_zero _)
+
+/-! ### of_valid -/
 
 /--
 Induction along the valid positions in a list of characters.
@@ -491,25 +532,6 @@ theorem split_of_valid (s p) : split s p = (List.splitOnP p s.1).map mk := by
 
 attribute [simp] toSubstring'
 
-theorem join_eq (ss : List String) : join ss = ⟨(ss.map data).join⟩ := go ss [] where
-  go : ∀ (ss : List String) cs, ss.foldl (· ++ ·) (mk cs) = ⟨cs ++ (ss.map data).join⟩
-    | [], _ => by simp
-    | ⟨s⟩::ss, _ => (go ss _).trans (by simp)
-
-@[simp] theorem data_join (ss : List String) : (join ss).data = (ss.map data).join := by
-  rw [join_eq]
-
-theorem singleton_eq (c : Char) : singleton c = ⟨[c]⟩ := rfl
-
-@[simp] theorem data_singleton (c : Char) : (singleton c).data = [c] := rfl
-
-@[simp] theorem append_nil (s : String) : s ++ "" = s := ext (List.append_nil _)
-
-@[simp] theorem nil_append (s : String) : "" ++ s = s := rfl
-
-theorem append_assoc (s₁ s₂ s₃ : String) : (s₁ ++ s₂) ++ s₃ = s₁ ++ (s₂ ++ s₃) :=
-  ext (List.append_assoc ..)
-
 namespace Iterator
 
 @[simp] theorem forward_eq_nextn : forward = nextn := by
@@ -736,6 +758,8 @@ theorem anyAux_of_valid (p : Char → Bool) : ∀ l m r,
     simp [get_of_valid l (c::(m++r)), next_of_valid l c (m++r)]
     cases p c <;> simp
     simpa [← Nat.add_assoc, Nat.add_right_comm] using anyAux_of_valid p (l++[c]) m r
+
+/-! ### any, all, and contains -/
 
 theorem any_eq (s : String) (p : Char → Bool) : any s p = s.1.any p := by
   simpa using anyAux_of_valid p [] s.1 []
