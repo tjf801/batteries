@@ -31,8 +31,6 @@ theorem ext_iff {s₁ s₂ : String} : s₁ = s₂ ↔ s₁.data = s₂.data := 
 
 theorem singleton_eq (c : Char) : singleton c = ⟨[c]⟩ := rfl
 
-@[simp] theorem data_singleton (c : Char) : (singleton c).data = [c] := rfl
-
 /-! ### String.length -/
 
 @[simp] theorem length_empty : "".length = 0 := rfl
@@ -56,6 +54,8 @@ attribute [simp] toList -- prefer `String.data` over `String.toList` in lemmas
 @[simp] theorem data_push (s : String) (c : Char) : (s.push c).1 = s.1 ++ [c] := rfl
 
 @[simp] theorem data_append (s t : String) : (s ++ t).1 = s.1 ++ t.1 := rfl
+
+@[simp] theorem data_singleton (c : Char) : (singleton c).data = [c] := rfl
 
 theorem lt_iff (s t : String) : s < t ↔ s.1 < t.1 := .rfl
 
